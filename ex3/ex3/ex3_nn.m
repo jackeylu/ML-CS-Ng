@@ -74,6 +74,7 @@ pause;
 rp = randperm(m);
 
 for i = 1:m
+    break;
     % Display 
     fprintf('\nDisplaying Example Image\n');
     displayData(X(rp(i), :));
