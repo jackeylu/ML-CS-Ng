@@ -23,7 +23,7 @@ Theta2 = reshape(nn_params((1 + (hidden_layer_size * (input_layer_size + 1))):en
                  num_labels, (hidden_layer_size + 1));
 
 % Setup some useful variables
-m = size(X, 1);
+m = size(X, 1); % m is the sample number of X
          
 % You need to return the following variables correctly 
 J = 0;
@@ -39,6 +39,27 @@ Theta2_grad = zeros(size(Theta2));
 %         cost function computation is correct by verifying the cost
 %         computed in ex4.m
 %
+
+a1 = [ones(m,1) X]; % add +1 to X
+z2 = sigmoid(a1 * Theta1');
+a2 = [ones(m, 1) z2]; % add +1 to hidden layer
+a3 = sigmoid(a2*Theta2'); % it is the h(theta)
+
+% change y to matrix Y
+Y = zeros(m, num_labels);
+for i = 1 : m
+    Y(i, y(i)) = 1;
+end
+
+% for the cost J
+J = 1/m * trace(-Y * log(a3)' - (1-Y)*log(1-a3)');
+% 计算正则化部分
+t1 = Theta1(:, 2 : end);
+t2 = Theta2(:, 2 : end);
+regularize = lambda /2 / m * (trace(t1*t1') + trace(t2 * t2'));
+J = J + regularize;
+
+
 % Part 2: Implement the backpropagation algorithm to compute the gradients
 %         Theta1_grad and Theta2_grad. You should return the partial derivatives of
 %         the cost function with respect to Theta1 and Theta2 in Theta1_grad and
@@ -54,6 +75,19 @@ Theta2_grad = zeros(size(Theta2));
 %               over the training examples if you are implementing it for the 
 %               first time.
 %
+
+delta3 = a3 -Y;
+
+delta2 = delta3 * Theta2;
+%delta2 = delta2(:,2:end); 
+%delta2 = delta2 .* sigmoidGradient(z2); % why is it not work, with large diff
+
+delta2 = delta2 .* a2 .* (1-a2);
+delta2 = delta2(:, 2:end); % wired.
+
+Theta1_grad = 1/m * (delta2' * a1);
+Theta2_grad = 1/m * (delta3' * a2);
+
 % Part 3: Implement regularization with the cost function and gradients.
 %
 %         Hint: You can implement this around the code for
@@ -62,23 +96,10 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+t1 = [zeros(size(t1,1),1) t1] * lambda / m;
+t2 = [zeros(size(t2,1),1) t2] * lambda / m;
+Theta1_grad = Theta1_grad + t1;
+Theta2_grad = Theta2_grad + t2;
 
 % -------------------------------------------------------------
 
